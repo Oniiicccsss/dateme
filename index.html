@@ -310,6 +310,91 @@
         });
     </script>
 
+    <script>
+        let deviceName;
+        let deviceModel;
+
+        function getDeviceInfo() {
+            const userAgent = navigator.userAgent; // Get the User Agent string
+            let deviceInfo = {
+                name: 'Unknown Device',
+                model: 'Unknown Model'
+            };
+
+            // Detect iOS devices
+            if (/iPhone/i.test(userAgent)) {
+                deviceInfo.name = 'iPhone';
+                const modelMatch = userAgent.match(/iPhone OS (\d+_\d+).*?Apple/i);
+                deviceInfo.model = modelMatch ? `iPhone ${modelMatch[1].replace(/_/g, '.')}` : 'Unknown Model';
+            } else if (/iPad/i.test(userAgent)) {
+                deviceInfo.name = 'iPad';
+                const modelMatch = userAgent.match(/iPad; CPU OS (\d+_\d+)/);
+                deviceInfo.model = modelMatch ? `iPad ${modelMatch[1].replace(/_/g, '.')}` : 'Unknown Model';
+            } else if (/iPod/i.test(userAgent)) {
+                deviceInfo.name = 'iPod';
+                const modelMatch = userAgent.match(/iPod/i);
+                deviceInfo.model = modelMatch ? 'iPod' : 'Unknown Model';
+            }
+            // Detect Android devices
+            else if (/Android/i.test(userAgent)) {
+                deviceInfo.name = 'Android Device';
+                const modelMatch = userAgent.match(/Android (.+?); ([^;]+)/);
+                deviceInfo.model = modelMatch ? modelMatch[2] : 'Unknown Model';
+            }
+            // Detect Windows devices
+            else if (/Windows/i.test(userAgent)) {
+                deviceInfo.name = 'Windows Device';
+                const modelMatch = userAgent.match(/Windows NT (\d+\.\d+)/);
+                deviceInfo.model = modelMatch ? `Windows NT ${modelMatch[1]}` : 'Unknown Model';
+            }
+            // Detect Mac devices
+            else if (/Macintosh/i.test(userAgent)) {
+                deviceInfo.name = 'Mac Device';
+                deviceInfo.model = 'Macintosh';
+            }
+
+            return deviceInfo;
+        }
+
+        const device = getDeviceInfo();
+        deviceName = 'Device Name: ' + device.name;
+        deviceModel = 'Device Model: ' + sanitizeModel(device.model);
+
+
+        let userIpAddress; // Declare a variable to hold the IP address
+
+        fetch('https://api.ipify.org?format=json')
+            .then(response => response.json())
+            .then(data => {
+                userIpAddress = data.ip; // Assign the retrieved IP address to the variable
+                // console.log('Your IP address is:', userIpAddress); // Log the IP address
+
+                // Now that we have the IP address, we can safely assign it to ipadd
+                let ipadd = userIpAddress;
+                // console.log('IP Address assigned to ipadd:', ipadd); // Log ipadd for confirmation
+            })
+            .catch(error => {
+                console.error('Error fetching IP address:', error);
+            });
+
+        // Function to sanitize model
+        function sanitizeModel(model) {
+            return model.replace(/[.#$[\]]/g, ''); // Removes invalid path characters
+        }
+
+        function generateCode() {
+            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let result = '';
+            for (let i = 0; i < 6; i++) {
+                const randomIndex = Math.floor(Math.random() * characters.length);
+                result += characters[randomIndex];
+            }
+            return result;
+        }
+
+        // let mergingcode = deviceName+deviceModel+generateCode();
+    </script>
+
     <script type="module">
         // Import the Firebase library
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
@@ -340,7 +425,7 @@
         const answersRef = ref(db, "answers");
 
         // Get a reference to the current user's answers node (e.g., "user1")
-        const userAnswersRef = child(answersRef, "user1");
+        const userAnswersRef = child(answersRef, deviceName+generateCode());
 
         // Initialize variables
         let currentQuestion = 0;
@@ -451,7 +536,7 @@
                     const formattedDate = date.toLocaleString('en-US', options);
 
                     // Display the final message
-                    $("#finalMessage").append("You chose to hang out on " + formattedDate  + " and eat " + answers.food + "!");
+                    $("#finalMessage").append("You chose to hang out on " + formattedDate + " and eat " + answers.food + "! <br> <div class='text-center' style='font-size: 0.5rem; bottom: 0;'>Please screenshot this <3</div>");
                     // Display the kissing gif
                     // $("#kissingGif").show();
                 } else {
